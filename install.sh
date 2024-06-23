@@ -17,7 +17,7 @@ chmod u+x working/srv/${ZIP_SUBPATH}/TerrariaServer*
 
 rm -rf server
 mkdir server
-mv -f working/srv/${ZIP_SUBPATH}/* -t server
+mv -f working/srv/${ZIP_SUBPATH}/* server/
 echo "Server downloaded to server/"
 
 rm -rf working
