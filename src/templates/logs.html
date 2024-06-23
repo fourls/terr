@@ -1,11 +1,7 @@
-{% extends "layout.html" %}
-
-{% block content %}
-<div id="logs">
+<div id="logs" hx-get="/logs" hx-trigger="every 2s">
     <ul>
         {% for log in logs %}
         <li>{{ log }}</li>
         {% endfor %}
     </ul>
 </div>
-{% endblock %}

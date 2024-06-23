@@ -3,7 +3,8 @@ from terraria import Terraria
 from pathlib import Path
 
 app = Flask(__name__)
-app.run()
+if __name__ == "__main__":
+    app.run()
 
 base_path = Path(__file__).parent.parent.resolve()
 terraria = Terraria(
@@ -14,6 +15,10 @@ terraria = Terraria(
     motd="yooo whatsuppp!!!"
 )
 
-@app.route("/")
+@app.route("/logs")
 def get_logs():
     return render_template("logs.html", logs=terraria.output())
+
+@app.route("/")
+def get_index():
+    return render_template("main.html", logs=terraria.output())

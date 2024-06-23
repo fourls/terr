@@ -40,10 +40,10 @@ class Terraria:
     def output(self) -> List[str]:
         self.output_lock.acquire()
         try:
-            out = self._output.copy()
+            return self._output.copy()
         finally:
             self.output_lock.release()
-        return out
+        return ["ERROR"]
 
     def _output_thread(self):
         assert(self.proc.stdout != None)
