@@ -3,9 +3,14 @@
 source env.sh
 export SCRIPT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)"
 
-WORLD_PATH=$SCRIPT_DIR/worlds
+DATA_PATH=$SCRIPT_DIR/data
+if [ ! -f "$DATA_PATH" ]; then
+    mkdir $DATA_PATH
+fi
+
+WORLD_PATH=$DATA_PATH/worlds
 WORLD_FILE="$WORLD_PATH/$TERRARIA_WORLD.wld"
-CONFIG_PATH="$SCRIPT_DIR/config.txt"
+CONFIG_PATH="$DATA_PATH/config.txt"
 
 echo """
 worldpath=$WORLD_PATH
@@ -18,4 +23,3 @@ autocreate=1
 """ > "$CONFIG_PATH"
 
 server/TerrariaServer -config "$CONFIG_PATH"
-rm "$CONFIG_PATH"
