@@ -1,3 +1,6 @@
 server/
 data/
+working/
 env.sh
+.venv/
+.DS_Store
