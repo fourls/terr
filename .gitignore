@@ -4,3 +4,4 @@ working/
 env.sh
 .venv/
 .DS_Store
+*.pyc
