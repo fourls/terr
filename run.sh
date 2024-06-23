@@ -18,3 +18,4 @@ autocreate=1
 """ > "$CONFIG_PATH"
 
 server/TerrariaServer -config "$CONFIG_PATH"
+rm "$CONFIG_PATH"
