@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div id="logs">
+    <ul>
+        {% for log in logs %}
+        <li>{{ log }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
