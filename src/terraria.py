@@ -38,9 +38,12 @@ class Terraria:
         self.output_thread = threading.Thread(target=self._output_thread)
         self.output_thread.start()
 
-    def output(self) -> List[str]:
+    def output(self, max: Optional[int] = None) -> List[str]:
         with self.output_lock:
-            return self._output.copy()
+            if max != None:
+                return self._output[-max:]
+            else:
+                return self._output.copy()
         
     def send(self, cmd: str):
         assert(self.proc.stdin != None)
@@ -54,6 +57,9 @@ class Terraria:
         except subprocess.TimeoutExpired:
             self.proc.kill()
             time.sleep(0.3)
+
+    def wait(self):
+        self.proc.wait()
         
     def running(self) -> bool:
         return self.proc.poll() == None

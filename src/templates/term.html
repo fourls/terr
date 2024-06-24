@@ -1,0 +1,22 @@
+{% if running %}
+<div
+    id="term-content"
+    hx-get="/output"
+    hx-trigger="load, every 2s, terraria:outputChange"
+    hx-swap="scroll:bottom"
+>
+    {% include "server_output.html" %}
+</div>
+<div id="term-input-container">
+    <span id="cmd-feedback" _="on htmx:load from #term-content put '' into me"></span>
+    <form hx-post="/cmds/custom" hx-target="#cmd-feedback" _="on submit set #cmd's value to ''">
+        <input type="text" name="cmd" id="cmd" autocomplete="off">
+        <input type="submit" value="&gt;">
+    </form>
+</div>
+{% else %}
+<span id="term-info">
+    The server is not running.<br>
+    <button hx-post="/cmds/start" hx-target="#term-info">Start Server</button>
+</span>
+{% endif %}

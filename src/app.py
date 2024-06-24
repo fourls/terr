@@ -1,5 +1,5 @@
-from typing import Optional
-from flask import Flask, render_template
+from typing import List, Optional
+from flask import Flask, make_response, request, render_template
 from terraria import Terraria
 from pathlib import Path
 from threading import RLock
@@ -38,53 +38,74 @@ class TerrariaSingleton:
                 motd="yooo whatsuppp!!!"
             )
 
-@app.route("/logs")
-def get_logs():
+def get_logs(terraria: Optional[Terraria]) -> List[str]:
+    if terraria:
+        return terraria.output(200)
+    else:
+        return []
+
+@app.route("/term")
+def get_term():
     with TerrariaSingleton.lock:
         terraria = TerrariaSingleton.get()
-        if not terraria:
-            return "Terraria server has not been started."
-        output = terraria.output()[-200:]
-        print(output)
-        
-        return render_template("logs.html", logs=output)
+        return render_template("term.html", running=terraria != None, logs=get_logs(terraria))
+
+@app.route("/output")
+def get_output():
+    with TerrariaSingleton.lock:
+        terraria = TerrariaSingleton.get()
+        return render_template("server_output.html", logs=get_logs(terraria))
+
+@app.route("/status")
+def get_status():
+    with TerrariaSingleton.lock:
+        terraria = TerrariaSingleton.get()
+        return render_template("status.html", running=terraria != None)
 
 @app.route("/")
-def get_index():
+def get_main():
     with TerrariaSingleton.lock:
         terraria = TerrariaSingleton.get()
-        if not terraria:
-            return render_template("main.html", server_started=False)
-        output = terraria.output()[-200:]
-
-    return render_template("main.html", logs=output, server_started=True)
-
-@app.route("/cmds/help", methods=["POST"])
-def send_help():
-    with TerrariaSingleton.lock:
-        terraria = TerrariaSingleton.get()
-        if not terraria:
-            return "Terraria server has not been started."
-        terraria.send("help")
-    
-    return "Help requested"
+        return render_template("main.html", running=terraria != None, logs=get_logs(terraria))
 
 @app.route("/cmds/start", methods=["POST"])
-def send_start():
+def start_server():
     with TerrariaSingleton.lock:
         terraria = TerrariaSingleton.get()
-        if terraria:
-            return "Terraria server is already started."
-        TerrariaSingleton.new()
+        if not terraria:
+            TerrariaSingleton.new()
 
-    return render_template("main.html", server_started=True)
+    resp = make_response("Starting server...")
+    resp.headers.set("HX-Trigger", "terraria:statusChange")
+    return resp
 
 @app.route("/cmds/stop", methods=["POST"])
-def send_stop():
+def stop_server():
     with TerrariaSingleton.lock:
         terraria = TerrariaSingleton.get()
         if not terraria:
             return "Terraria server has not been started."
         terraria.exit()
+
+    resp = make_response("Stopping server...")
+    resp.headers.set("HX-Trigger", "terraria:statusChange")
+    return resp
+
+
+@app.route("/cmds/custom", methods=["POST"])
+def send_cmd():
+    cmd = request.form.get("cmd", "").strip()
+    events = ["terraria:outputChange"]
+
+    with TerrariaSingleton.lock:
+        terraria = TerrariaSingleton.get()
+        if terraria:
+            terraria.send(cmd)
+
+            if cmd in ["exit", "exit-nosave"]:
+                events.append("terraria:statusChange")
+                terraria.wait()
     
-    return render_template("main.html", server_started=False)
+    resp = make_response("Sending command...")
+    resp.headers.set("HX-Trigger", ", ".join(events))
+    return resp
