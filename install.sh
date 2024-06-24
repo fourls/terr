@@ -1,9 +1,12 @@
 #!/bin/bash
 
-i=1;
+SCRIPT_DIR="$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)"
+TERRARIA_VERSION=1449
+DOWNLOAD_URL=https://terraria.org/api/download/pc-dedicated-server/terraria-server-${TERRARIA_VERSION}.zip
 
 platform=Linux
 
+i=1;
 while [ $i -le $# ]; do
     case $1 in
         --platform)
@@ -23,11 +26,6 @@ while [ $i -le $# ]; do
     shift 1;
 done
 
-
-TERRARIA_VERSION=1449
-SERVER_DOWNLOAD_URL=https://terraria.org/api/download/pc-dedicated-server/terraria-server-${TERRARIA_VERSION}.zip
-zip_subpath=${TERRARIA_VERSION}/${platform}
-
 # prerequisites
 echo "Installing prerequisites..."
 if [ "$platform" == Linux ]; then
@@ -39,7 +37,8 @@ fi
 mkdir working
 
 echo "Downloading Terraria server..."
-curl -o working/terraria.zip -L $SERVER_DOWNLOAD_URL
+zip_subpath=${TERRARIA_VERSION}/${platform}
+curl -o working/terraria.zip -L $DOWNLOAD_URL
 unzip -o "working/terraria.zip" "${zip_subpath}/*" -d working/srv
 
 rm -rf server
@@ -51,15 +50,10 @@ exe_path="TerrariaServer"
 if [ "$platform" == Mac ]; then
     exe_path="Terraria Server.app/Contents/MacOS/TerrariaServer.bin.osx"
 fi
+exe_path=$SCRIPT_DIR/server/files/$exe_path
 
-# shellcheck disable=SC2005
-echo "$(cat <<EOF
-#!/bin/bash
-server_dir=\$( dirname -- "\${BASH_SOURCE[0]}" )
-"\${server_dir}/files/${exe_path}" "\$@"
-EOF
-)" > server/launch.sh
-chmod u+x server/launch.sh
-chmod u+x "server/files/${exe_path}"
+chmod u+x "$exe_path"
+echo "$exe_path" > server/launch.txt
+echo "Configured executable at $exe_path"
 
 rm -rf working

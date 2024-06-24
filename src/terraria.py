@@ -3,6 +3,7 @@ import tempfile
 from typing import Any, Dict, List, Optional
 import subprocess
 import threading
+import time
 
 class Terraria:
     def __init__(
@@ -38,12 +39,24 @@ class Terraria:
         self.output_thread.start()
 
     def output(self) -> List[str]:
-        self.output_lock.acquire()
-        try:
+        with self.output_lock:
             return self._output.copy()
-        finally:
-            self.output_lock.release()
-        return ["ERROR"]
+        
+    def send(self, cmd: str):
+        assert(self.proc.stdin != None)
+        self.proc.stdin.write(cmd + "\r\n")
+        self.proc.stdin.flush()
+
+    def exit(self):
+        self.send("exit")
+        try:
+            self.proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            self.proc.kill()
+            time.sleep(0.3)
+        
+    def running(self) -> bool:
+        return self.proc.poll() == None
 
     def _output_thread(self):
         assert(self.proc.stdout != None)
@@ -51,11 +64,8 @@ class Terraria:
         line: str = "foo"
         while len(line) > 0:
             line = self.proc.stdout.readline()
-            self.output_lock.acquire()
-            try:
+            with self.output_lock:
                 self._output.append(line)
-            finally:
-                self.output_lock.release()
 
     def _create_config_file(self, config: Dict[str, Any]) -> Path:
         (fid, config_path_str) = tempfile.mkstemp()

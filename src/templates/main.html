@@ -1,5 +1,16 @@
 {% extends "layout.html" %}
 
 {% block content %}
+{% if server_started %}
+<h2>Server status: Running</h2>
+<button hx-post="/cmds/help" hx-target="#cmd-result">Help</button>
+<button hx-post="/cmds/stop" hx-target="body">Stop</button>
+{% else %}
+<h2>Server status: Stopped</h2>
+<button hx-post="/cmds/start" hx-target="body">Start</button>
+{% endif %}
+<span id="cmd-result"></span>
+{% if server_started %}
 {% include "logs.html" %}
+{% endif %}
 {% endblock %}

@@ -1,4 +1,4 @@
-<div id="logs" hx-get="/logs" hx-trigger="every 2s">
+<div id="logs" hx-get="/logs" hx-select="#logs > *" hx-trigger="every 1s">
     <ul>
         {% for log in logs %}
         <li>{{ log }}</li>
