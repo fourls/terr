@@ -1,6 +1,9 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<header>
+    <button hx-post="/logout" hx-target="body">Logout</button>
+</header>
 <div id="status" hx-get="/status" hx-trigger="terraria:statusChange from:body, every 20s">
     {% include "status.html" %}
 </div>

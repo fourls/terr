@@ -1,0 +1,29 @@
+body {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    
+    display: flex;
+    
+    font-family: monospace;
+    background-color: #222;
+}
+
+form#login {
+    margin: auto;
+    
+    border: 1px solid black;
+    padding: 1em 2em;
+    background-color: #eee;
+}
+
+form#login input[type=text], input[type=password] {
+    display: block;
+    margin-bottom: 1em;
+}
+
+form#login input[type=submit] {
+    display: block;
+}

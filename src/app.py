@@ -1,12 +1,45 @@
 from typing import List, Optional
-from flask import Flask, make_response, request, render_template
+from flask import Flask, make_response, redirect, request, render_template
 from terraria import Terraria
 from pathlib import Path
 from threading import RLock
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
 app = Flask(__name__)
-if __name__ == "__main__":
-    app.run()
+app.secret_key = "so secret!!"
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "index" # type: ignore
+
+class User:
+    def __init__(self, id: str, name: str, password: str):
+        self.id = id
+        self.name = name
+        self.password = password
+
+    def get_id(self) -> str:
+        return self.id
+    
+    @property
+    def is_authenticated(self) -> bool:
+        return True
+    
+    @property
+    def is_active(self) -> bool:
+        return True
+    
+    @property
+    def is_anonymous(self) -> bool:
+        return False
+
+ADMIN_USER = User("admin", "HE9164", "gold36")
+
+@login_manager.user_loader
+def load_user(id: str):
+    if id == ADMIN_USER.get_id():
+        return ADMIN_USER
+    else:
+        return None
 
 class TerrariaSingleton:
     terraria: Optional[Terraria] = None
@@ -44,31 +77,69 @@ def get_logs(terraria: Optional[Terraria]) -> List[str]:
     else:
         return []
 
+@app.route("/")
+def index():
+    if current_user.is_authenticated:
+        return redirect("/dashboard")
+    
+    return render_template("login.html")
+
+@app.route("/login", methods=["POST"])
+def login():
+    user = request.form.get("user", None)
+    password = request.form.get("password", None)
+
+    if user == ADMIN_USER.name and password == ADMIN_USER.password:
+        assert(login_user(ADMIN_USER))
+
+    return redirect("/dashboard")
+
+@app.route("/logout", methods=["POST"])
+@login_required
+def logout():
+    logout_user()
+
+    resp = make_response("Logged out")
+    resp.headers.set("HX-Redirect", "/")
+    return resp
+
+@app.route("/style")
+@login_required
+def get_css():
+    resp = make_response(render_template("style.css"))
+    resp.content_type = "text/css"
+    return resp
+
 @app.route("/term")
+@login_required
 def get_term():
     with TerrariaSingleton.lock:
         terraria = TerrariaSingleton.get()
         return render_template("term.html", running=terraria != None, logs=get_logs(terraria))
 
 @app.route("/output")
+@login_required
 def get_output():
     with TerrariaSingleton.lock:
         terraria = TerrariaSingleton.get()
         return render_template("server_output.html", logs=get_logs(terraria))
 
 @app.route("/status")
+@login_required
 def get_status():
     with TerrariaSingleton.lock:
         terraria = TerrariaSingleton.get()
         return render_template("status.html", running=terraria != None)
 
-@app.route("/")
-def get_main():
+@app.route("/dashboard")
+@login_required
+def get_dashboard():
     with TerrariaSingleton.lock:
         terraria = TerrariaSingleton.get()
         return render_template("main.html", running=terraria != None, logs=get_logs(terraria))
 
 @app.route("/cmds/start", methods=["POST"])
+@login_required
 def start_server():
     with TerrariaSingleton.lock:
         terraria = TerrariaSingleton.get()
@@ -80,6 +151,7 @@ def start_server():
     return resp
 
 @app.route("/cmds/stop", methods=["POST"])
+@login_required
 def stop_server():
     with TerrariaSingleton.lock:
         terraria = TerrariaSingleton.get()
@@ -93,6 +165,7 @@ def stop_server():
 
 
 @app.route("/cmds/custom", methods=["POST"])
+@login_required
 def send_cmd():
     cmd = request.form.get("cmd", "").strip()
     events = ["terraria:outputChange"]

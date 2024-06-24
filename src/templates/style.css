@@ -9,6 +9,7 @@
   bottom: 0;
   
   font-family: monospace;
+  background-color: #222;
 }
 
 #status-bar {
@@ -53,24 +54,28 @@
   text-align: center;
 }
 
-#term-info button {
+button {
   border: 0;
-  margin-top: 0.3em;
   
   background-color: #666;
   color: #efefef;
   font-family: inherit;
-  padding: 0.6em 1em;
+  padding: 0.3em 0.6em;
   
   cursor: pointer;
 }
 
-#term-info button:hover {
+button:hover {
   background-color: #555;
 }
 
-#term-info button:active {
+utton:active {
   background-color: #444;
+}
+
+#term-info button {
+  margin-top: 0.3em;
+  padding: 0.6em 1em;
 }
 
 #term-content {
@@ -107,4 +112,27 @@
   font-family: monospace;
   padding: 0 1em;
   border-radius: 0;
+}
+
+header {
+  background-color: #666;
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+form#login {
+  margin: auto;
+  
+  border: 1px solid black;
+  padding: 1em 2em;
+  background-color: #eee;
+}
+
+form#login input[type=text], input[type=password] {
+  display: block;
+  margin-bottom: 1em;
+}
+
+form#login input[type=submit] {
+  display: block;
 }
