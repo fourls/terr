@@ -1,12 +1,6 @@
 #!/bin/bash
-
-if [ $# -lt 1 ]; then
-    echo "usage: terraria.sh [ install | config | choose | run ]"
-    exit 1
-fi
-
 UNAME=$(uname)
-
+TMUX_SESSION="terrariasrv_managed"
 BASEDIR=$(pwd)
 SERVERFILES=${BASEDIR}/server
 WORLDPATH=${BASEDIR}/worlds
@@ -22,10 +16,10 @@ function install_server {
 
     if [ "$UNAME" == Darwin ]; then
         local platform="Mac"
-        brew install unzip
+        brew install unzip tmux
     else
         local platform="Linux"
-        apt-get install -y curl unzip
+        apt-get install -y curl unzip tmux
     fi
 
     mkdir working
@@ -95,31 +89,113 @@ EOF
 }
 
 function run_terraria {
-    "$EXE_PATH" "$@"
+    "$EXE_PATH" -config "$CONFIG" "$@"
 }
 
-function run_terraria_world {
-    local worldname=$1 && shift
+function get_world_file {
+    local worldname=$1
     local worldfile="${WORLDPATH}/${worldname}.wld"
 
     if [ -z "$worldname" ]; then
-        echo "usage: terraria.sh run <world name>" && exit 1
+        echo "usage: Please supply a world name"
+        return 1
     elif [ ! -f "$worldfile" ]; then
-        echo "World '${worldname}' does not exist."
-        exit 2
+        echo "err: World '${worldname}' does not exist"
+        return 2
     fi
 
-    run_terraria -config "$CONFIG" -world "$worldfile" "$@"
+    echo "$worldfile"
+}
+
+function tmux_terraria_running {
+    tmux has "-t$TMUX_SESSION" &>/dev/null
+    return $?
+}
+
+function start_tmux_terraria {
+    if tmux_terraria_running; then
+        echo "err: Terraria server is already running"
+        exit 3
+    fi
+
+    local world
+    if ! world=$(get_world_file "$1"); then
+        echo "$world"
+        exit 1
+    fi
+    shift
+
+    local tmux_args=("-s${TMUX_SESSION}")
+    if [ "$1" != "-j" ]; then
+        tmux_args+=("-d")
+    fi
+
+    if tmux new "${tmux_args[@]}" -- "$EXE_PATH" -world "$world" "$@"; then
+        echo "Terraria server session created."
+    else
+        echo "err: Failed to create Terraria server session"
+    fi
+}
+
+function stop_tmux_terraria {
+    if ! tmux_terraria_running; then
+        echo "err: No Terraria server is running"
+        exit 3
+    fi
+
+    if [ ! "$1" == "-f" ]; then
+        echo "Terraria server should be stopped by joining and passing 'exit'. Pass -f to override this and kill the session."
+        exit 4
+    fi
+
+    if tmux kill-session "-t${TMUX_SESSION}"; then
+        echo "Terraria server session killed."
+    else
+        echo "err: Failed to kill Terraria server session"
+    fi
+}
+
+function join_tmux_terraria {
+    if ! tmux_terraria_running; then
+        echo "err: No Terraria server is running"
+        exit 3
+    fi
+
+    if ! tmux attach "-t${TMUX_SESSION}"; then
+        echo "err: Failed to attach to Terraria server session"
+    fi
+}
+
+function get_tmux_terraria_status {
+    echo -n "Server: "
+    if tmux_terraria_running; then
+        echo "RUNNING"
+    else
+        echo "STOPPED"
+    fi
 }
 
 function main {
+    if [ $# -lt 1 ]; then
+        echo "usage: terraria.sh [ install | config | choose | run | start | stop | join | status ]"
+        exit 1
+    fi
+
     local cmd=$1 && shift
 
     case $cmd in
         install) install_server "1449" "$@" ;;
         config) configure_server "$@" ;;
-        choose) run_terraria -config "$CONFIG" ;;
-        run) run_terraria_world "$@" ;;
+        choose) run_terraria "$@" ;;
+        run)
+            local world
+            world=$(get_world_file "$1") && shift
+            run_terraria -world "$world" "$@"
+            ;;
+        start) start_tmux_terraria "$@" ;;
+        stop) stop_tmux_terraria "$@" ;;
+        join) join_tmux_terraria "$@" ;;
+        status) get_tmux_terraria_status ;;
         *) echo "unknown command '$cmd'" && exit 1 ;;
     esac
 }
