@@ -1,8 +1,2 @@
-server/
-worlds/
-working/
-env.sh
 .env
-.venv/
 .DS_Store
-*.pyc
