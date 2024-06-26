@@ -42,8 +42,8 @@ function install_server {
     curl -o working/terraria.zip -L "https://terraria.org/api/download/pc-dedicated-server/terraria-server-${version}.zip" || exit 1
     unzip -o "working/terraria.zip" "${zip_subpath}/*" -d working/srv >/dev/null || exit 1
 
-    rm -rf "${SERVERFILES}"
-    mv -f "working/srv/${zip_subpath}" "${SERVERFILES}" || exit 1
+    rm -rf "${SERVERFILES}" && mkdir "${SERVERFILES}"
+    mv -f working/srv/"${zip_subpath}"/* "${SERVERFILES}/" || exit 1
     chmod +x "${EXE_PATH}" || exit 1
     techo "Done"
 
