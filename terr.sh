@@ -17,33 +17,43 @@ case $UNAME in
     *) EXE_PATH="${SERVERFILES}/TerrariaServer.bin.x86_64";;
 esac
 
+function techo {
+    echo "[terr] $1"
+}
+
 function install_server {
     local version=$1
     shift
 
+    techo "Installing prerequisites..."
     if [ "$UNAME" == Darwin ]; then
         local platform="Mac"
-        brew install unzip tmux
+        brew install unzip tmux || exit 1
     else
         local platform="Linux"
-        apt-get install -y curl unzip tmux
+        apt-get install -y curl unzip tmux || exit 1
     fi
+    techo "Done"
 
     mkdir working
-
-    echo "Downloading Terraria server..."
+    techo "Downloading Terraria server..."
     local zip_subpath=${version}/${platform}
-    curl -o working/terraria.zip -L "https://terraria.org/api/download/pc-dedicated-server/terraria-server-${version}.zip"
-    unzip -o "working/terraria.zip" "${zip_subpath}/*" -d working/srv
+
+    curl -o working/terraria.zip -L "https://terraria.org/api/download/pc-dedicated-server/terraria-server-${version}.zip" || exit 1
+    unzip -o "working/terraria.zip" "${zip_subpath}/*" -d working/srv >/dev/null || exit 1
 
     rm -rf "${SERVERFILES}"
-    mv -f "working/srv/${zip_subpath}" "${SERVERFILES}"
-    echo "Server downloaded"
+    mv -f "working/srv/${zip_subpath}" "${SERVERFILES}" || exit 1
+    chmod u+x "${EXE_PATH}" || exit 1
+    techo "Done"
 
-    chmod u+x "${EXE_PATH}"
-    echo "Configured permissions for ${EXE_PATH}"
-
-    configure_server -port 7777 -discard
+    if [ ! -f "${CONFIG}" ]; then
+        techo "Creating config file..."
+        configure_server -port 7777 -discard
+        techo "Done"
+    else
+        techo "Config file already exists"
+    fi
 
     rm -rf working
 }
@@ -114,6 +124,12 @@ function get_world_file {
     echo "$worldfile"
 }
 
+function list_worlds {
+    for world in "${WORLDPATH}"/*.wld; do
+        basename "$world" .wld
+    done
+}
+
 function tmux_terraria_running {
     tmux has "-t$TMUX_SESSION" &>/dev/null
     return $?
@@ -182,18 +198,50 @@ function get_tmux_terraria_status {
     fi
 }
 
+function help {
+    echo "usage: terr <command>"
+    echo
+    echo "Setup commands:"
+    echo "  install <args>...  Install the Terraria server and all dependencies"
+    echo "                     Additional arguments get passed directly to the server"
+    echo "  config             Retrieve or update the server configuration file"
+    echo "    [-port <port>]"
+    echo "    [-maxplayers <n>]"
+    echo "    [-motd <motd>]"
+    echo "    [-password <password>]"
+    echo
+    echo "Metadata commands:"
+    echo "  home               Print the terr home directory"
+    echo "  worlds             List all saved worlds"
+    echo
+    echo "Launch commands:"
+    echo "  choose             Start the server in this terminal without loading a world"
+    echo "                     Additional arguments get passed directly to the server"
+    echo "  run <world>        Start the server in this terminal, loading the given world"
+    echo
+    echo "Advanced launch commands (using tmux):"
+    echo "  start <world>      Start the server in a new tmux session, loading the given world"
+    echo "  stop [-f]          Stop the server tmux session"
+    echo "  join               Attach to the server tmux session"
+    echo "  status             Print the status of the server tmux session"
+}
+
 function main {
     if [ $# -lt 1 ]; then
-        echo "usage: terr [ install | config | choose | run | start | stop | join | status ]"
+        help
         exit 1
     fi
 
-    local cmd=$1 && shift
+    local cmd=$1
+    shift
 
     case $cmd in
+        help|-h|-help|--help) help ;;
         install) install_server "1449" "$@" ;;
         config) configure_server "$@" ;;
         choose) run_terraria "$@" ;;
+        worlds) list_worlds "$@" ;;
+        home) echo "$TERR_HOME" ;;
         run)
             local world
             world=$(get_world_file "$1") && shift
@@ -203,7 +251,7 @@ function main {
         stop) stop_tmux_terraria "$@" ;;
         join) join_tmux_terraria "$@" ;;
         status) get_tmux_terraria_status ;;
-        *) echo "unknown command '$cmd'" && exit 1 ;;
+        *) echo "unknown command '$cmd'" && help && exit 1 ;;
     esac
 }
 
