@@ -1,10 +1,17 @@
 #!/bin/bash
+
+# System properties
 UNAME=$(uname)
 TMUX_SESSION="terrariasrv_managed"
-BASEDIR=$(pwd)
-SERVERFILES=${BASEDIR}/server
-WORLDPATH=${BASEDIR}/worlds
-CONFIG=${BASEDIR}/config.txt
+
+# File locations
+if [ -z "$TERR_HOME" ]; then
+    TERR_HOME=$(pwd)
+fi
+SERVERFILES=${TERR_HOME}/server
+WORLDPATH=${TERR_HOME}/worlds
+CONFIG=${TERR_HOME}/config.txt
+
 case $UNAME in
     Darwin) EXE_PATH="${SERVERFILES}/Terraria Server.app/Contents/MacOS/TerrariaServer.bin.osx";;
     *) EXE_PATH="${SERVERFILES}/TerrariaServer.bin.x86_64";;
@@ -177,7 +184,7 @@ function get_tmux_terraria_status {
 
 function main {
     if [ $# -lt 1 ]; then
-        echo "usage: terraria.sh [ install | config | choose | run | start | stop | join | status ]"
+        echo "usage: terr [ install | config | choose | run | start | stop | join | status ]"
         exit 1
     fi
 
