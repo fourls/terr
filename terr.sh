@@ -153,7 +153,7 @@ function start_tmux_terraria {
         tmux_args+=("-d")
     fi
 
-    if tmux new "${tmux_args[@]}" -- "$EXE_PATH" -world "$world" "$@"; then
+    if tmux new "${tmux_args[@]}" -- "$EXE_PATH" -config "$CONFIG" -world "$world" "$@"; then
         echo "Terraria server session created."
     else
         echo "err: Failed to create Terraria server session"
