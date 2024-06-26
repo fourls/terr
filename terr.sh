@@ -44,7 +44,7 @@ function install_server {
 
     rm -rf "${SERVERFILES}"
     mv -f "working/srv/${zip_subpath}" "${SERVERFILES}" || exit 1
-    chmod u+x "${EXE_PATH}" || exit 1
+    chmod +x "${EXE_PATH}" || exit 1
     techo "Done"
 
     if [ ! -f "${CONFIG}" ]; then
