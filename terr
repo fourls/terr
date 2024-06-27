@@ -199,29 +199,29 @@ function get_tmux_terraria_status {
 }
 
 function help {
-    echo "usage: terr <command>"
+    echo "usage: terr <command> [<args>...]"
     echo
-    echo "Setup commands:"
-    echo "  install <args>...  Install the Terraria server and all dependencies"
-    echo "                     Additional arguments get passed directly to the server"
+    echo "terr is a command line tool to assist with installing a Terraria dedicated server."
+    echo
+    echo "Maintenance commands:"
+    echo "  install            Install the Terraria server and all dependencies"
     echo "  config             Retrieve or update the server configuration file"
     echo "    [-port <port>]"
     echo "    [-maxplayers <n>]"
     echo "    [-motd <motd>]"
     echo "    [-password <password>]"
-    echo
-    echo "Metadata commands:"
     echo "  home               Print the terr home directory"
     echo "  worlds             List all saved worlds"
     echo
     echo "Launch commands:"
     echo "  choose             Start the server in this terminal without loading a world"
-    echo "                     Additional arguments get passed directly to the server"
     echo "  run <world>        Start the server in this terminal, loading the given world"
     echo
     echo "Advanced launch commands (using tmux):"
     echo "  start <world>      Start the server in a new tmux session, loading the given world"
-    echo "  stop [-f]          Stop the server tmux session"
+    echo "    [-j]               Attach to the tmux session after starting"
+    echo "  stop               Stop the server tmux session"
+    echo "    [-f]               Required to actually stop the session"
     echo "  join               Attach to the server tmux session"
     echo "  status             Print the status of the server tmux session"
 }
