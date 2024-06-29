@@ -198,32 +198,56 @@ function get_tmux_terraria_status {
     fi
 }
 
+function backup_world {
+    local world
+
+    if ! world=$(get_world_file "$1"); then
+        echo "$world"
+        exit 1
+    fi
+
+    local dest=$2
+
+    if [ -z "$dest" ]; then
+        echo "usage: Please supply a destination"
+        exit 1
+    fi
+
+    if ! cp "$world" "$dest"; then
+        echo "err: Could not copy to $dest"
+        exit 2
+    fi
+
+    echo "Backed up '$1' to $dest"
+}
+
 function help {
     echo "usage: terr <command> [<args>...]"
     echo
     echo "terr is a command line tool to assist with installing a Terraria dedicated server."
     echo
     echo "Maintenance commands:"
-    echo "  install            Install the Terraria server and all dependencies"
-    echo "  config             Retrieve or update the server configuration file"
+    echo "  install               Install the Terraria server and all dependencies"
+    echo "  config                Retrieve or update the server configuration file"
     echo "    [-port <port>]"
     echo "    [-maxplayers <n>]"
     echo "    [-motd <motd>]"
     echo "    [-password <password>]"
-    echo "  home               Print the terr home directory"
-    echo "  worlds             List all saved worlds"
+    echo "  home                  Print the terr home directory"
+    echo "  worlds                List all saved worlds"
+    echo "  backup <world> <dest> Copy a world file to a backup location"
     echo
     echo "Launch commands:"
-    echo "  choose             Start the server in this terminal without loading a world"
-    echo "  run <world>        Start the server in this terminal, loading the given world"
+    echo "  choose                Start the server in this terminal without loading a world"
+    echo "  run <world>           Start the server in this terminal, loading the given world"
     echo
     echo "Advanced launch commands (using tmux):"
-    echo "  start <world>      Start the server in a new tmux session, loading the given world"
-    echo "    [-j]               Attach to the tmux session after starting"
-    echo "  stop               Stop the server tmux session"
-    echo "    [-f]               Required to actually stop the session"
-    echo "  join               Attach to the server tmux session"
-    echo "  status             Print the status of the server tmux session"
+    echo "  start <world>         Start the server in a new tmux session, loading the given world"
+    echo "    [-j]                  Attach to the tmux session after starting"
+    echo "  stop                  Stop the server tmux session"
+    echo "    [-f]                  Required to actually stop the session"
+    echo "  join                  Attach to the server tmux session"
+    echo "  status                Print the status of the server tmux session"
 }
 
 function main {
@@ -251,6 +275,7 @@ function main {
         stop) stop_tmux_terraria "$@" ;;
         join) join_tmux_terraria "$@" ;;
         status) get_tmux_terraria_status ;;
+        backup) backup_world "$@" ;;
         *) echo "unknown command '$cmd'" && help && exit 1 ;;
     esac
 }

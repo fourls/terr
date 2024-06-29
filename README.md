@@ -55,6 +55,7 @@ in order to do so. `terr` makes this easier by managing the world path for you:
 * `terr worlds` lists all saved worlds
 * `terr run` and `terr start` require you to specify a world, which is the name of the world file without `.wld`
 * `terr choose` saves worlds to the correct location
+* `terr backup` provides an easy way to copy world files
 
 ### Setting the `terr` home directory
 
