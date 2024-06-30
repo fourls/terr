@@ -11,6 +11,7 @@ fi
 SERVERFILES=${TERR_HOME}/server
 WORLDPATH=${TERR_HOME}/worlds
 CONFIG=${TERR_HOME}/config.txt
+LOGPATH=${TERR_HOME}/logs
 
 case $UNAME in
     Darwin) EXE_PATH="${SERVERFILES}/Terraria Server.app/Contents/MacOS/TerrariaServer.bin.osx";;
@@ -105,8 +106,23 @@ EOF
     echo "$settings" > "$CONFIG"
 }
 
+function get_log_file {
+    if [ ! -d "$LOGPATH" ]; then
+        mkdir "$LOGPATH"
+    fi
+
+    local logfile
+    logfile=${LOGPATH}/terr_$(date +%Y%m%d_%H%M%S).log
+
+    # Create symlink
+    touch "$logfile"
+    ln -sf "$logfile" "${LOGPATH}/latest.log"
+
+    echo "$logfile"
+}
+
 function run_terraria {
-    "$EXE_PATH" -config "$CONFIG" "$@"
+    script -Fq "$(get_log_file)" "$EXE_PATH" -config "$CONFIG" "$@"
 }
 
 function get_world_file {
@@ -153,7 +169,7 @@ function start_tmux_terraria {
         tmux_args+=("-d")
     fi
 
-    if tmux new "${tmux_args[@]}" -- "$EXE_PATH" -config "$CONFIG" -world "$world" "$@"; then
+    if tmux new "${tmux_args[@]}" -- script -Fq "$(get_log_file)" "$EXE_PATH" -config "$CONFIG" -world "$world" "$@"; then
         echo "Terraria server session created."
     else
         echo "err: Failed to create Terraria server session"

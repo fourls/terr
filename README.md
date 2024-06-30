@@ -57,6 +57,12 @@ in order to do so. `terr` makes this easier by managing the world path for you:
 * `terr choose` saves worlds to the correct location
 * `terr backup` provides an easy way to copy world files
 
+### File logging
+
+The dedicated server has no inbuilt support for logging to a file, making it difficult to monitor the server without
+actively watching its output. `terr` automatically logs all input and output to a timestamped file in your Terraria
+setup's `logs` subdirectory.
+
 ### Setting the `terr` home directory
 
 `terr` assumes your Terraria setup is in the current working directory by default, but this can be overridden
